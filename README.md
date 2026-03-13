@@ -58,4 +58,4 @@ VITE_USE_COSMOS=true
 
 5. Restart the dev server.
 
-The isotope form will then post entries to `/api/isotopes`, which stores them in Cosmos DB.
+The isotope form will then post entries to `/isotopes`, which stores them in Cosmos DB.

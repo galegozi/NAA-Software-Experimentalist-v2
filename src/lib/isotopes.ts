@@ -100,7 +100,7 @@ function makeKey({
 }
 
 async function fetchRemoteIsotopes(): Promise<Isotope[]> {
-	const res = await fetch('/api/isotopes');
+	const res = await fetch('/isotopes');
 	if (!res.ok) {
 		throw new Error('Failed to fetch isotopes from server');
 	}
@@ -115,7 +115,7 @@ async function postRemoteIsotope(newIsotope: {
 	halfLife: number;
 	energy: number;
 }): Promise<Isotope[]> {
-	const res = await fetch('/api/isotopes', {
+	const res = await fetch('/isotopes', {
 		method: 'POST',
 		headers: {
 			'content-type': 'application/json'

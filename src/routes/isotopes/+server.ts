@@ -66,25 +66,25 @@ export async function POST({ request }: RequestEvent) {
 
 		const updated = existing
 			? {
-					...existing,
-					elementName: elementName.trim(),
-					massNumber,
-					suffix: suffix.trim(),
-					halfLife,
-					characteristicEnergies: Array.isArray(existing.characteristicEnergies)
-						? Array.from(new Set([...existing.characteristicEnergies, energy]))
-						: [energy]
-				}
+				...existing,
+				elementName: elementName.trim(),
+				massNumber,
+				suffix: suffix.trim(),
+				halfLife,
+				characteristicEnergies: Array.isArray(existing.characteristicEnergies)
+					? Array.from(new Set([...existing.characteristicEnergies, energy]))
+					: [energy]
+			}
 			: {
-					id,
-					partitionKey: id,
-					elementName: elementName.trim(),
-					elementShortName: elementShortName.trim(),
-					massNumber,
-					suffix: suffix.trim(),
-					halfLife,
-					characteristicEnergies: [energy]
-				};
+				id,
+				partitionKey: id,
+				elementName: elementName.trim(),
+				elementShortName: elementShortName.trim(),
+				massNumber,
+				suffix: suffix.trim(),
+				halfLife,
+				characteristicEnergies: [energy]
+			};
 
 		const { resource } = await container.items.upsert(updated);
 		return json(resource);
