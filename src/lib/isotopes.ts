@@ -47,8 +47,8 @@ function normalizeIsotope(raw: unknown): Isotope | null {
 		? value.characteristicEnergies.filter((n) => typeof n === 'number')
 		: [];
 
-	let massNumber = typeof raw.massNumber === 'number' ? raw.massNumber : NaN;
-	let suffix = typeof raw.suffix === 'string' ? raw.suffix : '';
+	let massNumber = typeof value.massNumber === 'number' ? value.massNumber : NaN;
+	let suffix = typeof value.suffix === 'string' ? value.suffix : '';
 
 	// Migrate older records where "suffix" contained the mass number (e.g. "87m").
 	if (Number.isNaN(massNumber) && suffix) {
@@ -104,7 +104,11 @@ async function fetchRemoteIsotopes(): Promise<Isotope[]> {
 	if (!res.ok) {
 		throw new Error('Failed to fetch isotopes from server');
 	}
-	return (await res.json()) as Isotope[];
+	const payload = await res.json();
+	if (!Array.isArray(payload)) {
+		return [];
+	}
+	return payload.map(normalizeIsotope).filter((iso): iso is Isotope => iso !== null);
 }
 
 async function postRemoteIsotope(newIsotope: {
@@ -114,7 +118,7 @@ async function postRemoteIsotope(newIsotope: {
 	suffix: string;
 	halfLife: number;
 	energy: number;
-}): Promise<Isotope[]> {
+}): Promise<Isotope | Isotope[] | null> {
 	const res = await fetch('/isotopes', {
 		method: 'POST',
 		headers: {
@@ -125,7 +129,24 @@ async function postRemoteIsotope(newIsotope: {
 	if (!res.ok) {
 		throw new Error('Failed to update isotope on server');
 	}
-	return (await res.json()) as Isotope[];
+	const payload = await res.json();
+	if (Array.isArray(payload)) {
+		return payload.map(normalizeIsotope).filter((iso): iso is Isotope => iso !== null);
+	}
+	return normalizeIsotope(payload);
+}
+
+function upsertIsotope(items: Isotope[], isotope: Isotope): Isotope[] {
+	const key = makeKey(isotope);
+	const index = items.findIndex((item) => makeKey(item) === key);
+
+	if (index === -1) {
+		return [...items, isotope];
+	}
+
+	const next = [...items];
+	next[index] = isotope;
+	return next;
 }
 
 function createIsotopeStore() {
@@ -158,8 +179,22 @@ function createIsotopeStore() {
 			if (useRemote && browser) {
 				try {
 					const updated = await postRemoteIsotope(newIsotope);
-					set(updated);
-					return;
+					if (Array.isArray(updated)) {
+						set(updated);
+						saveToStorage(updated);
+						return;
+					}
+
+					if (updated) {
+						update((items) => {
+							const next = upsertIsotope(items, updated);
+							saveToStorage(next);
+							return next;
+						});
+						return;
+					}
+
+					throw new Error('Server returned an invalid isotope payload');
 				} catch (error) {
 					console.error('Failed to post isotope to remote:', error);
 					// fall back to local storage if remote fails
