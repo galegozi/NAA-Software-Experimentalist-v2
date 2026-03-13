@@ -2,6 +2,9 @@ import type { RequestEvent } from '@sveltejs/kit';
 import { json } from '@sveltejs/kit';
 import { getCosmosContainer } from '$lib/cosmos';
 
+// This endpoint exists to support clients that expect a /api/cosmos path.
+// The existing /isotopes endpoint is the canonical API used by the UI.
+
 export async function GET() {
 	try {
 		const container = getCosmosContainer();
@@ -19,20 +22,17 @@ export async function GET() {
 	}
 }
 
-function buildId(elementShortName: string, massNumber: number, suffix: string) {
-	return `${elementShortName.trim().toLowerCase()}::${massNumber}::${suffix.trim().toLowerCase()}`;
-}
-
 export async function POST({ request }: RequestEvent) {
 	const body = await request.json();
-	const { elementName, elementShortName, massNumber, suffix, halfLife, energy } = body as {
-		elementName: string;
-		elementShortName: string;
-		massNumber: number;
-		suffix: string;
-		halfLife: number;
-		energy: number;
-	};
+	const { elementName, elementShortName, massNumber, suffix, halfLife, energy } =
+		body as {
+			elementName: string;
+			elementShortName: string;
+			massNumber: number;
+			suffix: string;
+			halfLife: number;
+			energy: number;
+		};
 
 	if (
 		!elementName ||
@@ -56,7 +56,9 @@ export async function POST({ request }: RequestEvent) {
 
 	try {
 		const container = getCosmosContainer();
-		const id = buildId(elementShortName, massNumber, suffix);
+		const id = `${elementShortName.trim().toLowerCase()}::${massNumber}::${suffix
+			.trim()
+			.toLowerCase()}`;
 
 		// Try to read an existing item (itemId == partitionKey here)
 		let existing;
@@ -75,7 +77,9 @@ export async function POST({ request }: RequestEvent) {
 				suffix: suffix.trim(),
 				halfLife,
 				characteristicEnergies: Array.isArray(existing.characteristicEnergies)
-					? Array.from(new Set([...existing.characteristicEnergies, energy]))
+					? Array.from(
+						new Set([...existing.characteristicEnergies, energy])
+					)
 					: [energy]
 			}
 			: {

@@ -135,7 +135,8 @@ function createIsotopeStore() {
 		if (useRemote) {
 			fetchRemoteIsotopes()
 				.then(set)
-				.catch(() => {
+				.catch((error) => {
+					console.error('Failed to load isotopes from remote:', error);
 					// Fall back to local storage if remote fails
 					set(loadFromStorage());
 				});
@@ -159,7 +160,8 @@ function createIsotopeStore() {
 					const updated = await postRemoteIsotope(newIsotope);
 					set(updated);
 					return;
-				} catch {
+				} catch (error) {
+					console.error('Failed to post isotope to remote:', error);
 					// fall back to local storage if remote fails
 				}
 			}
