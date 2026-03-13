@@ -170,7 +170,7 @@
 					required
 				/>
 				<select bind:value={halfLifeUnit}>
-					{#each halfLifeUnits as unit}
+					{#each halfLifeUnits as unit (unit.value)}
 						<option value={unit.value}>{unit.label}</option>
 					{/each}
 				</select>
@@ -191,7 +191,7 @@
 		</div>
 
 		<div style="align-self:flex-end; display:flex; gap: 0.5rem;">
-			<button type="submit">Add energy</button>
+			<button type="submit">Add Isotope</button>
 			<button type="button" class="secondary" onclick={clearAll}>Clear all</button>
 		</div>
 	</form>
@@ -238,9 +238,9 @@
 
 <style>
 	.page {
-		max-width: 860px;
+		/* max-width: 860px; */
 		margin: 0 auto;
-		padding: 1rem;
+		padding: 5rem;
 	}
 	form {
 		display: grid;
